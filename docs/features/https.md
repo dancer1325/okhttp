@@ -1,30 +1,48 @@
 HTTPS
 =====
 
-OkHttp attempts to balance two competing concerns:
+* OkHttp -- attempts to -- balance
+  * **Connectivity**
+    * -- to -- as many hosts as possible
+    * == advanced hosts / run the latest versions of [boringssl](https://boringssl.googlesource.com/boringssl/) + less out of date hosts / running older versions of [OpenSSL](https://www.openssl.org/)
+  * **Security** of the connection
+    * == verification of the remote webserver / certificates + privacy of data exchanged -- with -- strong ciphers
 
- * **Connectivity** to as many hosts as possible. That includes advanced hosts that run the latest versions of [boringssl](https://boringssl.googlesource.com/boringssl/) and less out of date hosts running older versions of [OpenSSL](https://www.openssl.org/).
- * **Security** of the connection. This includes verification of the remote webserver with certificates and the privacy of data exchanged with strong ciphers.
+* requisites by OkHttp, to negotiate a connection to an HTTPS server
+  * [TLS versions](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-tls-version/)
+    * client / wants to prioritize
+      * connectivity -> include obsolete TLS versions
+      * security -> include ONLY latest TLS
+  * [cipher suites](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-cipher-suite/) / offer
+    * client / wants to prioritize
+      * connectivity -> include weak-by-design cipher suites
+      * security -> include ONLY strongest cipher suites
 
-When negotiating a connection to an HTTPS server, OkHttp needs to know which [TLS versions](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-tls-version/) and [cipher suites](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-cipher-suite/) to offer. A client that wants to maximize connectivity would include obsolete TLS versions and weak-by-design cipher suites. A strict client that wants to maximize security would be limited to only the latest TLS version and strongest cipher suites.
+* [ConnectionSpec](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-connection-spec/)
+  * implement 
+    * Specific security vs. connectivity decisions
+  * -- follow the -- model [Google Cloud Policies](https://cloud.google.com/load-balancing/docs/ssl-policies-concepts)
+    * [historical changes | this policy](../security/tls_configuration_history.md) 
+  * built-in, by OkHttp
+    * `RESTRICTED_TLS`
+      * == secure configuration / try to meet stricter compliance requirements
+    * `MODERN_TLS`
+      * == secure configuration / -- connects to -- modern HTTPS servers
+      * default one
+    * `COMPATIBLE_TLS`
+      * == secure configuration / -- connects to -- secure–but not current–HTTPS servers
+      * uses
+        * as fallback
+    * `CLEARTEXT`
+      * == insecure configuration / -- used for -- `http://` URLs
 
-Specific security vs. connectivity decisions are implemented by [ConnectionSpec](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-connection-spec/). OkHttp includes four built-in connection specs:
+    ```java
+    OkHttpClient client = new OkHttpClient.Builder()
+        .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
+        .build();
+    ```
 
- * `RESTRICTED_TLS` is a secure configuration, intended to meet stricter compliance requirements.
- * `MODERN_TLS` is a secure configuration that connects to modern HTTPS servers.
- * `COMPATIBLE_TLS` is a secure configuration that connects to secure–but not current–HTTPS servers.
- * `CLEARTEXT` is an insecure configuration that is used for `http://` URLs.
-
-These loosely follow the model set in [Google Cloud Policies](https://cloud.google.com/load-balancing/docs/ssl-policies-concepts). We [track changes](../security/tls_configuration_history.md) to this policy.
-
-By default, OkHttp will attempt a `MODERN_TLS` connection.  However by configuring the client connectionSpecs you can allow a fall back to `COMPATIBLE_TLS` connection if the modern configuration fails.
-
-```java
-OkHttpClient client = new OkHttpClient.Builder()
-    .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
-    .build();
-```
-
+* TODO:
 The TLS versions and cipher suites in each spec can change with each release. For example, in OkHttp 2.2 we dropped support for SSL 3.0 in response to the [POODLE](https://googleonlinesecurity.blogspot.ca/2014/10/this-poodle-bites-exploiting-ssl-30.html) attack. And in OkHttp 2.3 we dropped support for [RC4](https://en.wikipedia.org/wiki/RC4#Security). As with your desktop web browser, staying up-to-date with OkHttp is the best way to stay secure.
 
 You can build your own connection spec with a custom set of TLS versions and cipher suites. For example, this configuration is limited to three highly-regarded cipher suites. Its drawback is that it requires Android 5.0+ and a similarly current webserver.
