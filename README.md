@@ -1,52 +1,79 @@
 OkHttp
 ======
 
-See the [project website][okhttp] for documentation and APIs.
+* check [project website][okhttp]
+* HTTP 
+  * == modern applications network 
+    * uses
+      * exchange data & media
+    * if you do efficiently -> your stuff
+      * load faster
+      * saves bandwidth
 
-HTTP is the way modern applications network. It’s how we exchange data & media. Doing HTTP
-efficiently makes your stuff load faster and saves bandwidth.
-
-OkHttp is an HTTP client that’s efficient by default:
-
- * HTTP/2 support allows all requests to the same host to share a socket.
- * Connection pooling reduces request latency (if HTTP/2 isn’t available).
- * Transparent GZIP shrinks download sizes.
- * Response caching avoids the network completely for repeat requests.
-
-OkHttp perseveres when the network is troublesome: it will silently recover from common connection
-problems. If your service has multiple IP addresses, OkHttp will attempt alternate addresses if the
-first connect fails. This is necessary for IPv4+IPv6 and services hosted in redundant data
-centers. OkHttp supports modern TLS features (TLS 1.3, ALPN, certificate pinning). It can be
-configured to fall back for broad connectivity.
-
-Using OkHttp is easy. Its request/response API is designed with fluent builders and immutability. It
-supports both synchronous blocking calls and async calls with callbacks.
+* OkHttp
+  * == HTTP client / by default
+    * HTTP/2 support / ALL requests -- can flow to the -- SAME host / share a socket
+    * Connection pooling
+      * if HTTP/2 is NOT available -> reduces request latency
+    * Transparent GZIP
+      * -- shrinks -- download sizes
+    * Response caching
+      * -- avoids, through the network -- repeated requests
+  * if network has got problems -> OkHttp perseveres
+    * _Example:_ try to recover the connection 
+    * if your service has multiple IP addresses & somme connections fail -> OkHttp will attempt alternate addresses
+      * Reason: 🧠 necessary for IPv4+IPv6 & services / hosted | redundant data centers
+  * supports
+    * modern TLS features (TLS 1.3, ALPN, certificate pinning)
+      * OkHttp `3.12.x` -- lacks support for -- TLS 1.2
+      * uses
+        * fall back -- for -- broad connectivity
+      * [updated to the dynamic TLS ecosystem][tls_history]
+    * both
+      * synchronous blocking calls
+      * async calls with callbacks 
+    * [Conscrypt][conscrypt] | Java platforms
+      * integrates [BoringSSL](https://github.com/google/boringssl) -- with -- Java
+      * if it's the first security provider -> used by OkHttp
+    
+        ```java
+        Security.insertProviderAt(Conscrypt.newProvider(), 1);
+        ```
+  * request/response API -- is designed with --
+    * fluent builders
+    * immutability
 
 
 Get a URL
 ---------
 
-This program downloads a URL and prints its contents as a string. [Full source][get_example].
+* [Full source][get_example]
+  * goal
+    * downloads a URL
+    * prints its contents -- as a -- string 
 
-```java
-OkHttpClient client = new OkHttpClient();
-
-String run(String url) throws IOException {
-  Request request = new Request.Builder()
-      .url(url)
-      .build();
-
-  try (Response response = client.newCall(request).execute()) {
-    return response.body().string();
-  }
-}
-```
+    ```java
+    OkHttpClient client = new OkHttpClient();
+    
+    String run(String url) throws IOException {
+      Request request = new Request.Builder()
+          .url(url)
+          .build();
+    
+      try (Response response = client.newCall(request).execute()) {
+        return response.body().string();
+      }
+    }
+    ```
 
 
 Post to a Server
 ----------------
 
-This program posts data to a service. [Full source][post_example].
+* [Full source][post_example]
+  * goal
+    * posts data -- to a -- service
+
 
 ```java
 public static final MediaType JSON = MediaType.get("application/json");
@@ -65,83 +92,85 @@ String post(String url, String json) throws IOException {
 }
 ```
 
-Further examples are on the [OkHttp Recipes page][recipes].
+* [OkHttp Recipes page][recipes]
+  * more examples    
 
 
 Requirements
 ------------
 
-OkHttp works on Android 5.0+ (API level 21+) and Java 8+.
+* Android
+  * OkHttp latest release -> Android 5.0+ (API level 21+)
+  * OkHttp `3.12.x` branch -> Android 2.3+ (API level 9+)
+* Java
+  * OkHttp latest release -> Java 8+
+  * OkHttp `3.12.x` branch -> Java 7+
+* [Okio][okio] -- for --
+  * high-performance I/O
+  * [Kotlin standard library][kotlin]
+* your platform's built-in TLS implementation
+  * used by OkHttp
 
-OkHttp depends on [Okio][okio] for high-performance I/O and the [Kotlin standard library][kotlin]. Both are small libraries with strong backward-compatibility.
 
-We highly recommend you keep OkHttp up-to-date. As with auto-updating web browsers, staying current
-with HTTPS clients is an important defense against potential security problems. [We
-track][tls_history] the dynamic TLS ecosystem and adjust OkHttp to improve connectivity and
-security.
+Recommendations
+------------
 
-OkHttp uses your platform's built-in TLS implementation. On Java platforms OkHttp also supports
-[Conscrypt][conscrypt], which integrates [BoringSSL](https://github.com/google/boringssl) with Java. OkHttp will use Conscrypt if it is
-the first security provider:
-
-```java
-Security.insertProviderAt(Conscrypt.newProvider(), 1);
-```
-
-The OkHttp `3.12.x` branch supports Android 2.3+ (API level 9+) and Java 7+. These platforms lack
-support for TLS 1.2 and should not be used.
-
+* keep OkHttp up-to-date
 
 Releases
 --------
 
-Our [change log][changelog] has release history.
+* [change log][changelog]
+* latest release | [Maven Central](https://search.maven.org/artifact/com.squareup.okhttp3/okhttp/4.12.0/jar)
 
-The latest release is available on [Maven Central](https://search.maven.org/artifact/com.squareup.okhttp3/okhttp/4.12.0/jar).
+    ```kotlin
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    ```
 
-```kotlin
-implementation("com.squareup.okhttp3:okhttp:4.12.0")
-```
+* Snapshot builds | [available][snap]
+* [R8 and ProGuard][r8_proguard] rules
+* [bill of materials (BOM)][bom]
+  * allows
+    * keeping OkHttp artifacts | up to date & version compatibility
 
-Snapshot builds are [available][snap]. [R8 and ProGuard][r8_proguard] rules are available.
-
-Also, we have a [bill of materials (BOM)][bom] available to help you keep OkHttp artifacts up to date and be sure about version compatibility.
-
-```kotlin
-    dependencies {
-       // define a BOM and its version
-       implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
-
-       // define any required OkHttp artifacts without version
-       implementation("com.squareup.okhttp3:okhttp")
-       implementation("com.squareup.okhttp3:logging-interceptor")
-    }
-```
+        ```kotlin
+            dependencies {
+               // define a BOM and its version
+               implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
+    
+               // define any required OkHttp artifacts without version
+               implementation("com.squareup.okhttp3:okhttp")
+               implementation("com.squareup.okhttp3:logging-interceptor")
+            }
+        ```
 
 MockWebServer
 -------------
 
-OkHttp includes a library for testing HTTP, HTTPS, and HTTP/2 clients.
+* included library
+  * allows testing
+    * HTTP
+    * HTTPS
+    * HTTP/2 clients
+* latest release | [Maven Central](https://search.maven.org/artifact/com.squareup.okhttp3/mockwebserver/4.12.0/jar)
 
-The latest release is available on [Maven Central](https://search.maven.org/artifact/com.squareup.okhttp3/mockwebserver/4.12.0/jar).
-
-```kotlin
-testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-```
+    ```kotlin
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    ```
 
 GraalVM Native Image
 --------------------
 
-Building your native images with Graal https://www.graalvm.org/ should work automatically.
-This is not currently in a final released version, so `5.0.0-alpha.2` should be used.
-Please report any bugs or workarounds you find.
+* [GraalVM](https://www.graalvm.org/)
+* versions
+  * NOT currently exist a final released version
+  * use `5.0.0-alpha.2`
+* _Example:_
 
-See the okcurl module for an example build.
-
-```shell
-$ ./gradlew okcurl:nativeImage
-$ ./okcurl/build/graal/okcurl https://httpbin.org/get
-```
+    ```shell
+    $ ./gradlew okcurl:nativeImage
+    $ ./okcurl/build/graal/okcurl https://httpbin.org/get
+    ```
 
 License
 -------
