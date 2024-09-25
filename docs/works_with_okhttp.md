@@ -1,7 +1,7 @@
 Works with OkHttp
 =================
 
-Here’s some libraries that work nicely with OkHttp.
+libraries / work nicely with OkHttp:
 
  * [Chucker](https://github.com/ChuckerTeam/chucker): An in-app HTTP inspector for Android OkHttp clients.
  * [Coil](https://github.com/coil-kt/coil): An image loading library for Android backed by Kotlin Coroutines.
