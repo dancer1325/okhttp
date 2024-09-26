@@ -20,7 +20,7 @@ HTTPS
 
 * [ConnectionSpec](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-connection-spec/)
   * implement 
-    * Specific security vs. connectivity decisions
+    * Specific security vs connectivity decisions
   * -- follow the -- model [Google Cloud Policies](https://cloud.google.com/load-balancing/docs/ssl-policies-concepts)
     * [historical changes | this policy](../security/tls_configuration_history.md) 
   * built-in, by OkHttp
@@ -42,51 +42,74 @@ HTTPS
         .build();
     ```
 
-* TODO:
-The TLS versions and cipher suites in each spec can change with each release. For example, in OkHttp 2.2 we dropped support for SSL 3.0 in response to the [POODLE](https://googleonlinesecurity.blogspot.ca/2014/10/this-poodle-bites-exploiting-ssl-30.html) attack. And in OkHttp 2.3 we dropped support for [RC4](https://en.wikipedia.org/wiki/RC4#Security). As with your desktop web browser, staying up-to-date with OkHttp is the best way to stay secure.
+  * TLS versions & cipher suites / `ConnectionSpec` -- can change -- / each release
+    * _Example1:_ OkHttp 2.2 dropped support -- for -- SSL 3.0
+      * Reason: 🧠due to [POODLE](https://googleonlinesecurity.blogspot.ca/2014/10/this-poodle-bites-exploiting-ssl-30.html) attack 🧠	 
+    * _Example2:_ OkHttp 2.3 dropped support -- for -- [RC4](https://en.wikipedia.org/wiki/RC4#Security)
+    * recommendation
+      * ⭐stay up-to-date with OkHttp version ⭐
 
-You can build your own connection spec with a custom set of TLS versions and cipher suites. For example, this configuration is limited to three highly-regarded cipher suites. Its drawback is that it requires Android 5.0+ and a similarly current webserver.
+  * custom `ConnectionSpec` / custom set of TLS versions & cipher suites
+    * _Example:_ configuration -- limited to -- 3 highly-regarded cipher suites / requires Android 5.0+
 
-```java
-ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-    .tlsVersions(TlsVersion.TLS_1_2)
-    .cipherSuites(
-          CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-          CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-          CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256)
-    .build();
-
-OkHttpClient client = new OkHttpClient.Builder()
-    .connectionSpecs(Collections.singletonList(spec))
-    .build();
-```
+    ```java
+    ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .cipherSuites(
+              CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+              CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+              CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256)
+        .build();
+    
+    OkHttpClient client = new OkHttpClient.Builder()
+        .connectionSpecs(Collections.singletonList(spec))
+        .build();
+    ```
 
 ### Debugging TLS Handshake Failures
 
-The TLS handshake requires clients and servers to share a common TLS version and cipher suite. This
-depends on the JVM or Android version, OkHttp version, and web server configuration. If there is no
-common cipher suite and TLS version, your call will fail like this:
+* TLS handshake
+  * requires
+    * clients & servers -- must share -- common
+      * TLS version
+      * cipher suite
+  * depends on
+    * JVM or Android version
+    * OkHttp version
+    * web server configuration
+  * _Example:_ requirements NOT meet
 
-```
-Caused by: javax.net.ssl.SSLProtocolException: SSL handshake aborted: ssl=0x7f2719a89e80:
-    Failure in SSL library, usually a protocol error
-        error:14077410:SSL routines:SSL23_GET_SERVER_HELLO:sslv3 alert handshake
-        failure (external/openssl/ssl/s23_clnt.c:770 0x7f2728a53ea0:0x00000000)
-    at com.android.org.conscrypt.NativeCrypto.SSL_do_handshake(Native Method)
-```
+    ```
+    Caused by: javax.net.ssl.SSLProtocolException: SSL handshake aborted: ssl=0x7f2719a89e80:
+        Failure in SSL library, usually a protocol error
+            error:14077410:SSL routines:SSL23_GET_SERVER_HELLO:sslv3 alert handshake
+            failure (external/openssl/ssl/s23_clnt.c:770 0x7f2728a53ea0:0x00000000)
+        at com.android.org.conscrypt.NativeCrypto.SSL_do_handshake(Native Method)
+    ```
 
-You can check a web server's configuration using [Qualys SSL Labs][qualys]. OkHttp's TLS
-configuration history is [tracked here](../security/tls_configuration_history.md).
-
-Applications expected to be installed on older Android devices should consider adopting the
-[Google Play Services’ ProviderInstaller][provider_installer]. This will increase security for users
-and increase connectivity with web servers.
+* [Qualys SSL Labs][qualys]
+  * allows
+    * checking a web server's configuration
+* [OkHttp's TLS configuration history](../security/tls_configuration_history.md)
+* Applications / expected to be installed | older Android devices -- should consider adopting -- [Google Play Services’ ProviderInstaller][provider_installer]
+  * Reason: 🧠increase
+    * security for users
+    * connectivity with web servers 🧠
 
 ### Certificate Pinning ([.kt][CertificatePinningKotlin], [.java][CertificatePinningJava])
 
-By default, OkHttp trusts the certificate authorities of the host platform. This strategy maximizes connectivity, but it is subject to certificate authority attacks such as the [2011 DigiNotar attack](https://www.computerworld.com/article/2510951/cybercrime-hacking/hackers-spied-on-300-000-iranians-using-fake-google-certificate.html). It also assumes your HTTPS servers’ certificates are signed by a certificate authority.
-
-Use [CertificatePinner](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-certificate-pinner/) to restrict which certificates and certificate authorities are trusted. Certificate pinning increases security, but limits your server team’s abilities to update their TLS certificates. **Do not use certificate pinning without the blessing of your server’s TLS administrator!**
+* OkHttp, by default, trusts or assumes
+  * certificate authorities | host platform ->
+    * maximizes connectivity
+    * -- subject to -- certificate authority attacks
+      * _Example:_ [2011 DigiNotar attack](https://www.computerworld.com/article/2510951/cybercrime-hacking/hackers-spied-on-300-000-iranians-using-fake-google-certificate.html)
+  * your HTTPS servers’ certificates -- are signed by a -- certificate authority
+* [CertificatePinner](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-certificate-pinner/)
+  * increases security
+    * -- via -- restricting certificates & certificate authorities / are trusted
+  * limits your server team’s abilities / update their TLS certificates
+  * recommendation
+    * verify its use it with **your server’s TLS administrator!**
 
 === ":material-language-kotlin: Kotlin"
     ```kotlin
@@ -137,7 +160,9 @@ Use [CertificatePinner](https://square.github.io/okhttp/4.x/okhttp/okhttp3/-cert
 
 ### Customizing Trusted Certificates ([.kt][CustomTrustKotlin], [.java][CustomTrustJava])
 
-The full code sample shows how to replace the host platform’s certificate authorities with your own set. As above, **do not use custom certificates without the blessing of your server’s TLS administrator!**
+* replace the host platform’s certificate authorities  -- with -- your own set 
+* recommendation
+  * verify its use it with **your server’s TLS administrator!**
 
 === ":material-language-kotlin: Kotlin"
     ```kotlin
