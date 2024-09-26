@@ -1,10 +1,14 @@
 Events
 ======
 
-Events allow you to capture metrics on your application’s HTTP calls. Use events to monitor:
-
- * The size and frequency of the HTTP calls your application makes. If you’re making too many calls, or your calls are too large, you should know about it!
- * The performance of these calls on the underlying network. If the network’s performance isn’t sufficient, you need to either improve the network or use less of it.
+* Events
+  * allows
+    * capturing metrics | your application’s HTTP calls
+  * uses
+    * monitoring
+      * TODO:
+      * The size and frequency of the HTTP calls your application makes. If you’re making too many calls, or your calls are too large, you should know about it!
+      * The performance of these calls on the underlying network. If the network’s performance isn’t sufficient, you need to either improve the network or use less of it.
 
 ### EventListener
 
