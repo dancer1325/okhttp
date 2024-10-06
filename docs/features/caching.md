@@ -1,9 +1,14 @@
 Caching
 =======
 
-OkHttp implements an optional, off by default, Cache. OkHttp aims for RFC correct and
-pragmatic caching behaviour, following common real-world browser like Firefox/Chrome and 
-server behaviour when ambiguous.
+* optional
+* off by default
+* goal
+  * RFC correct
+  * pragmatic caching behaviour
+  * follow common 
+    * real-world browser (Firefox/Chrome)
+    * server behaviour
 
 # Basic Usage
 
@@ -19,10 +24,16 @@ server behaviour when ambiguous.
 
 ## EventListener events 
 
-Cache Events are exposed via the EventListener API.  Typical scenarios are below.
+* Cache Events
+  * -- are exposed via the -- EventListener API
+  * typical scenarios
+    * cache hit
+    * cache miss
+    * conditional cache hit
 
 ### Cache Hit
 
+* TODO:
 In the ideal scenario the cache can fulfill the request without any conditional call to the network.
 This will skip the normal events such as DNS, connecting to the network, and downloading the response body.
 
